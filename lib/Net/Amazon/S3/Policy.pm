@@ -1,6 +1,6 @@
 package Net::Amazon::S3::Policy;
 
-use version; our $VERSION = qv('0.1.0');
+use version; our $VERSION = qv('0.1.1');
 
 use warnings;
 use strict;
@@ -10,15 +10,13 @@ use JSON;
 
 use Exporter qw( import );
 our @EXPORT_OK = qw( exact starts_with range );
-our %EXPORT_TAGS = (
-   all => \@EXPORT_OK,
-);
+our %EXPORT_TAGS = (all => \@EXPORT_OK,);
 
 # Module implementation here
 sub new {
    my $class = shift;
-   my %args = ref($_[0]) ? %{$_[0]} : @_;
-   my $self = bless {}, $class;
+   my %args  = ref($_[0]) ? %{$_[0]} : @_;
+   my $self  = bless {}, $class;
 
    if ($args{json}) {
       $self->parse($args{json});
@@ -34,52 +32,62 @@ sub new {
 
 # Accessors
 sub expiration {
-   my $self = shift;
+   my $self     = shift;
    my $previous = $self->{expiration};
    if (@_) {
       my $time = shift;
-      if ($time  && $time =~ /\A \d+ \z/mxs) {
+      if ($time && $time =~ /\A \d+ \z/mxs) {
          my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) =
-            gmtime($time);
-         $time = sprintf "%04d-%02d-%02dT%02d:%02d:%02d.000Z", $year + 1900,
-            $mon + 1, $mday, $hour, $min, $sec;
-      }
+           gmtime($time);
+         $time = sprintf "%04d-%02d-%02dT%02d:%02d:%02d.000Z",
+           $year + 1900,
+           $mon + 1, $mday, $hour, $min, $sec;
+      } ## end if ($time && $time =~ ...
       $time ? ($self->{expiration} = $time) : delete $self->{expiration};
-   }
+   } ## end if (@_)
    return $previous;
-}
+} ## end sub expiration
 
 sub conditions {
-   my $self = shift;
+   my $self     = shift;
    my $previous = $self->{conditions};
 
    if (@_) {
-      $self->{conditions} = (scalar(@_) == 1) ? shift : [ @_ ];
+      $self->{conditions} = (scalar(@_) == 1) ? shift : [@_];
    }
 
    return $previous;
-}
+} ## end sub conditions
 
-{ # try to understand rules
+{    # try to understand rules
+
+   sub _prepend_dollar {
+      substr($_[0], 0, 1) eq '$' ? $_[0] : '$' . $_[0];
+   }
    my @DWIMs = (
       sub {
          return unless m{\A\s* (\S+?) \s* \*  \s*\z}mxs;
-         return starts_with($1, '');
+         return starts_with(_prepend_dollar($1), '');
       },
       sub {
          return unless m{\A\s* (\S+) \s+ eq \s+ (.*?) \s*\z}mxs;
-         return ($2 eq '*') ? starts_with($1, '') : exact($1, $2);
+         return ($2 eq '*')
+           ? starts_with(_prepend_dollar($1), '')
+           : exact(_prepend_dollar($1), $2);
       },
       sub {
          return
-         unless
+           unless
             m{\A\s* (\S+) \s+ (?: ^ | starts[_-]?with) \s+ (.*?) \s*\z}mxs;
-         return starts_with($1, $2);
+         return starts_with(_prepend_dollar($1), $2);
       },
       sub {
-         return unless m{\A\s* (\d+) \s*<=\s* (\S+) \s*<=\s* (\d+) \s*\z}mxs;
+         return
+           unless m{\A\s* (\d+) \s*<=\s* (\S+) \s*<=\s* (\d+) \s*\z}mxs;
          my ($min, $value, $max) = ($1, $2, $3);
          s{_}{}g for $min, $max;
+
+         # no "_prepend_dollar" for range conditions
          return range($value, $min, $max);
       },
    );
@@ -97,14 +105,15 @@ sub conditions {
 
 sub add {
    my ($self, $condition) = @_;
-   push @{$self->conditions()}, ref($condition) ? $condition : _resolve_rule($condition);
-} ## end sub add
+   push @{$self->conditions()},
+     ref($condition) ? $condition : _resolve_rule($condition);
+}
 
 sub remove {
    my ($self, $condition) = @_;
    $condition = _resolve_rule($condition) unless ref $condition;
    my $conditions = $self->conditions();
-   my @filtered = grep {
+   my @filtered   = grep {
       my $keep;
       if (@$condition != @$_) {    # different lengths => different
          $keep = 1;
@@ -139,18 +148,18 @@ sub range {
 }
 
 sub json {
-   my $self = shift;
+   my $self   = shift;
    my %params = %$self;
    delete $params{expiration} unless defined $params{expiration};
    return to_json(\%params);
-}
+} ## end sub json
 
 sub base64 { return _encode_base64($_[0]->json()); }
 
 {
    no warnings;
-   *stringify = \&json;
-   *json_base64 = \&base64;
+   *stringify        = \&json;
+   *json_base64      = \&base64;
    *stringify_base64 = \&base64;
 }
 
@@ -158,22 +167,27 @@ sub parse {
    my ($self, $json) = @_;
 
    $json = _decode_base64($json)
-      unless substr($json, 0, 1) eq '{';
+     unless substr($json, 0, 1) eq '{';
 
-   my %decoded = %{ from_json($json) };
-   $self->{conditions} = [ map {
-      if (ref($_) eq 'ARRAY') {$_}
-      else { [ 'eq', %$_ ] }
-   } @{$decoded{conditions}} ];
+   my %decoded = %{from_json($json)};
+   $self->{conditions} = [
+      map {
+         if   (ref($_) eq 'ARRAY') { $_; }
+         else {
+            my ($name, $value) = %$_;
+            ['eq', '$' . $name, $value]; 
+         }
+        } @{$decoded{conditions}}
+   ];
    $self->{expiration} = $decoded{expiration};
 
    return $self;
-}
+} ## end sub parse
 
 sub signature {
    my ($self, $key) = @_;
    require Digest::HMAC_SHA1;
-   return hmac_sha1($self->base64(), $key);
+   return Digest::HMAC_SHA1::hmac_sha1($self->base64(), $key);
 }
 
 sub signature_base64 {
@@ -186,7 +200,7 @@ sub _decode_base64 {
    no warnings 'redefine';
    *_decode_base64 = \&MIME::Base64::decode_base64;
    goto \&MIME::Base64::decode_base64;
-}
+} ## end sub _decode_base64
 
 # Wrapper around base64 encoder, ensuring that there's no newline
 # to make AWS S3 happy
@@ -195,7 +209,6 @@ sub _encode_base64 {
    (my $retval = MIME::Base64::encode_base64($_[0])) =~ s/\n//gmxs;
    return $retval;
 }
-
 
 1;    # Magic true value required at end of module
 __END__
@@ -220,6 +233,8 @@ version number here is outdate, and you should peek the source.
    # Do What I Mean handling of conditions
    # Note: single quotes, $key is not a Perl variable in this example!
    $policy->add('$key eq path/to/somewhere');
+   # In DWIM mode, '$' are pre-pended automatically where necessary
+   $policy->add('key eq path/to/somewhere');
    $policy->add('x-some-field starts-with some-prefix');
    $policy->add(' 0 <= content-length-range <= 1_000_000 ');
    $policy->add('whatever *'); # any value admitted for field 'whatever'
@@ -227,8 +242,8 @@ version number here is outdate, and you should peek the source.
    # NON-DWIM interface for conditions
    use Net::Amazon::S3::Policy qw( :all ); # OR
    use Net::Amazon::S3::Policy qw( exact starts_with range );
-   $policy->add(exact('field', 'whatever spaced value   ');
-   $policy->add(starts_with('other-field', '   yadda    ');
+   $policy->add(exact('$field', 'whatever spaced value   ');
+   $policy->add(starts_with('$other-field', '   yadda    ');
    $policy->add(range('percentual', 0, 100));
 
    # The output as JSON
@@ -357,8 +372,9 @@ Your policy can then be built like this:
       expiration => time() + 60 * 60, # one-hour policy
       conditions => [
          '$key         starts-with /restricted/', # restrict to here
-         'Content-Type starts-with image/', # accept any image format
-         'x-amz-meta-colour *', # accept any colour
+         '$Content-Type starts-with image/', # accept any image format
+         '$x-amz-meta-colour *', # accept any colour
+         'bucket: somebucket',
       ],
    );
 
@@ -368,7 +384,7 @@ Your policy can then be built like this:
 
    # Put this as the value for "signature", 
    # instead of "base64-encoded-signature"
-   my $signature_for_form = $policy->signature_base64();
+   my $signature_for_form = $policy->signature_base64($key);
 
 =head1 INTERFACE 
 
@@ -446,7 +462,7 @@ othewise, it can be a string with a single condition, like the following
 examples:
 
    some-field eq some-value
-   some-other-field starts-with /path/to/somewhere/
+   $some-other-field starts-with /path/to/somewhere/
    10 <= numeric-value <= 1000
 
 Note that the string specification is less "strict" in checking its
@@ -479,6 +495,19 @@ value for a C<starts-with> rule;
 set an allowable range for the given field.
 
 =back
+
+Policies for exact or starts-with matching usually refer to the form's
+field, thus requiring to refer them as "variables" with a prepended
+dollar sign, just like Perl scalars (more or less). Thus, if you forget
+to put it, it will be automatically added for you. Hence, the following
+conditions are equivalent:
+
+   field  eq blah
+   $field eq blah
+
+because both yield the following condition in JSON:
+
+   ["eq","$field","blah"]
 
 =back
 

@@ -36,24 +36,24 @@ BEGIN {
    is_deeply(
       $conditions,
       [
-         [qw( eq prova ciao )],
-         [qw( starts-with provaxxx ciao )],
+         [qw( eq $prova ciao )],
+         [qw( starts-with $provaxxx ciao )],
          [qw( something 0 123312391 )],
-         [qw( starts-with anything ),  ''],
-         [qw( starts-with anything2 ), ''],
-         [qw( starts-with anything2 blah )],
+         [qw( starts-with $anything ),  ''],
+         [qw( starts-with $anything2 ), ''],
+         [qw( starts-with $anything2 blah )],
       ],
       'conditions match'
    );
 
    my $expected_json =
-'{"expiration":"2008-09-01T18:10:02.000Z","conditions":[["eq","prova","ciao"],["starts-with","provaxxx","ciao"],["something","0","123312391"],["starts-with","anything",""],["starts-with","anything2",""],["starts-with","anything2","blah"]]}';
+'{"expiration":"2008-09-01T18:10:02.000Z","conditions":[["eq","$prova","ciao"],["starts-with","$provaxxx","ciao"],["something","0","123312391"],["starts-with","$anything",""],["starts-with","$anything2",""],["starts-with","$anything2","blah"]]}';
    is($policy->stringify(), $expected_json, 'JSON generation');
 }
 
 {
    my $json =
-'{"expiration":"2008-09-01T18:10:02.000Z","conditions":[["eq","prova","ciao"],["starts-with","provaxxx","ciao"],["something","0","123312391"],["starts-with","anything",""],["starts-with","anything2",""],["starts-with","anything2","blah"],{"what":"this"}]}';
+'{"expiration":"2008-09-01T18:10:02.000Z","conditions":[["eq","$prova","ciao"],["starts-with","$provaxxx","ciao"],["something","0","123312391"],["starts-with","$anything",""],["starts-with","$anything2",""],["starts-with","$anything2","blah"],{"what":"this"}]}';
 
    my $policy = Net::Amazon::S3::Policy->new(json => $json);
    ok($policy, 'new with expiration time');
@@ -67,13 +67,13 @@ BEGIN {
    is_deeply(
       $conditions,
       [
-         [qw( eq prova ciao )],
-         [qw( starts-with provaxxx ciao )],
+         [qw( eq $prova ciao )],
+         [qw( starts-with $provaxxx ciao )],
          [qw( something 0 123312391 )],
-         [qw( starts-with anything ),  ''],
-         [qw( starts-with anything2 ), ''],
-         [qw( starts-with anything2 blah )],
-         [qw( eq what this )],
+         [qw( starts-with $anything ),  ''],
+         [qw( starts-with $anything2 ), ''],
+         [qw( starts-with $anything2 blah )],
+         [qw( eq $what this )],
       ],
       'conditions match',
    );

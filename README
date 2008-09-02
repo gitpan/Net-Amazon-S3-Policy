@@ -32,6 +32,12 @@ In addition to policy synthesis, the module is also capable of parsing
 some policy (base64-encoded or not, but in JSON format). This shouldn’t
 be a need in general... possibly for debug reasons.
 
+AVAILABILITY
+
+You can either grab the module from CPAN, or see what's going on at
+http://repo.or.cz/w/Net-Amazon-S3-Policy.git
+
+
 INSTALLATION
 
 To install this module, run the following commands:

@@ -1,5 +1,9 @@
 Revision history for Net-Amazon-S3-Policy
 
-0.0.1  Mon Sep  1 18:00:25 2008
+0.1.1  Tue Sep  2 12:31:00 2008
+       Removed some bugs, made DWIM interpretation more DWIM
+       Added example.
+
+0.1.0  Mon Sep  1 18:00:25 2008
        Initial release.
 

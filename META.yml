@@ -1,6 +1,6 @@
 ---
 name: Net-Amazon-S3-Policy
-version: 0.1.0
+version: 0.1.1
 author:
   - 'Flavio Poletti <flavio [at] polettix [dot] it>'
 abstract: manage Amazon S3 policies for HTTP POST forms
@@ -15,7 +15,7 @@ requires:
 provides:
   Net::Amazon::S3::Policy:
     file: lib/Net/Amazon/S3/Policy.pm
-    version: 0.1.0
+    version: 0.1.1
 generated_by: Module::Build version 0.2808
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.2.html
