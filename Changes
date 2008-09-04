@@ -1,5 +1,10 @@
 Revision history for Net-Amazon-S3-Policy
 
+0.1.2  Thu Sep  4 02:56:00 2008
+       Put a requisite on JSON at least version 2.
+       Better sample.
+       Made Exporter happy for previous versions.
+
 0.1.1  Tue Sep  2 12:31:00 2008
        Removed some bugs, made DWIM interpretation more DWIM
        Added example.

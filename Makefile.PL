@@ -11,7 +11,7 @@ WriteMakefile(
    PREREQ_PM     => {
       'Test::More' => 0,
       'version'    => 0,
-      'JSON'       => 0,
+      'JSON'       => '2.0',
    },
    dist  => {COMPRESS => 'gzip -9f', SUFFIX => 'gz',},
    clean => {FILES    => 'Net-Amazon-S3-Policy-*'},

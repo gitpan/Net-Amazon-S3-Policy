@@ -1,6 +1,6 @@
 package Net::Amazon::S3::Policy;
 
-use version; our $VERSION = qv('0.1.1');
+use version; our $VERSION = qv('0.1.2');
 
 use warnings;
 use strict;
@@ -8,7 +8,8 @@ use Carp;
 use English qw( -no_match_vars );
 use JSON;
 
-use Exporter qw( import );
+use Exporter;
+our @ISA = qw( Exporter );
 our @EXPORT_OK = qw( exact starts_with range );
 our %EXPORT_TAGS = (all => \@EXPORT_OK,);
 
@@ -219,8 +220,8 @@ Net::Amazon::S3::Policy - manage Amazon S3 policies for HTTP POST forms
 
 =head1 VERSION
 
-This document describes Net::Amazon::S3::Policy version 0.1.0. Most likely, this
-version number here is outdate, and you should peek the source.
+This document describes Net::Amazon::S3::Policy version 0.1.2. Most likely,
+this version number here is outdate, and you should peek the source.
 
 
 =head1 SYNOPSIS

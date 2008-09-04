@@ -10,7 +10,7 @@ my $builder = Module::Build->new(
    requires          => {
       'Test::More' => 0,
       'version'    => 0,
-      'JSON'       => 0,
+      'JSON'       => '2.0',
       'perl'       => '5.8.0',
    },
    add_to_cleanup => ['Net-Amazon-S3-Policy-*'],
