@@ -1,5 +1,11 @@
 Revision history for Net-Amazon-S3-Policy
 
+0.1.3  Sun Jul 21 16:43:00 2013
+       Added "SEE ALSO" section.
+       Made "DWIM" management more sane.
+       Fixed issue with POD encoding
+
+
 0.1.2  Thu Sep  4 02:56:00 2008
        Put a requisite on JSON at least version 2.
        Better sample.

@@ -1,9 +1,9 @@
 package Net::Amazon::S3::Policy;
 
-use version; our $VERSION = qv('0.1.2');
-
 use warnings;
 use strict;
+use version; our $VERSION = qv('0.1.3');
+
 use Carp;
 use English qw( -no_match_vars );
 use JSON;
@@ -63,43 +63,43 @@ sub conditions {
 {    # try to understand rules
 
    sub _prepend_dollar {
-      substr($_[0], 0, 1) eq '$' ? $_[0] : '$' . $_[0];
+      return substr($_[0], 0, 1) eq '$' ? $_[0] : '$' . $_[0];
    }
    my @DWIMs = (
-      sub {
-         return unless m{\A\s* (\S+?) \s* \*  \s*\z}mxs;
-         return starts_with(_prepend_dollar($1), '');
-      },
-      sub {
-         return unless m{\A\s* (\S+) \s+ eq \s+ (.*?) \s*\z}mxs;
-         return ($2 eq '*')
-           ? starts_with(_prepend_dollar($1), '')
-           : exact(_prepend_dollar($1), $2);
-      },
-      sub {
-         return
-           unless
-            m{\A\s* (\S+) \s+ (?: ^ | starts[_-]?with) \s+ (.*?) \s*\z}mxs;
-         return starts_with(_prepend_dollar($1), $2);
-      },
-      sub {
-         return
-           unless m{\A\s* (\d+) \s*<=\s* (\S+) \s*<=\s* (\d+) \s*\z}mxs;
-         my ($min, $value, $max) = ($1, $2, $3);
-         s{_}{}g for $min, $max;
+         qr{\A\s* (\S+?) \s* \*  \s*\z}mxs => sub {
+            my $target = _prepend_dollar(shift);
+            return starts_with($target, '');
+         },
+         qr{\A\s* (\S+) \s+ eq \s+ (.*?) \s*\z}mxs => sub{
+            my $target = _prepend_dollar(shift);
+            my $value = shift;
+            return $value eq '*' ? starts_with($target, '') : exact($target, $value);
+         },
+         qr{\A\s* (\S+) \s+ (?: ^ | starts[_-]?with) \s+ (.*?) \s*\z}mxs => sub {
+            my $target = _prepend_dollar(shift);
+            my $prefix = shift;
+            return starts_with($target, $prefix);
+         },
+         qr{\A\s* (\d+) \s*<=\s* (\S+) \s*<=\s* (\d+) \s*\z}mxs => sub {
+            my ($min, $value, $max) = @_;
+            s{_}{}g for $min, $max;
 
-         # no "_prepend_dollar" for range conditions
-         return range($value, $min, $max);
-      },
+            # no "_prepend_dollar" for range conditions
+            return range($value, $min, $max);
+         },
    );
 
    sub _resolve_rule {
-      local $_ = shift;
-      for my $tester (@DWIMs) {
-         if (my $retval = $tester->()) {
-            return $retval;
+      my ($string) = @_;
+
+      for my $i (0 .. (@DWIMs - 1) / 2) {
+         my ($regex, $callback) = @DWIMs[$i * 2, $i * 2 + 1];
+         if (my @captures = $string =~ /$regex/) {
+            my $result = $callback->(@captures);
+            return $result if defined $result;
          }
       }
+
       croak "could not understand '$_', bailing out";
    } ## end sub _resolve_rule
 }
@@ -108,6 +108,7 @@ sub add {
    my ($self, $condition) = @_;
    push @{$self->conditions()},
      ref($condition) ? $condition : _resolve_rule($condition);
+   return;
 }
 
 sub remove {
@@ -214,13 +215,15 @@ sub _encode_base64 {
 1;    # Magic true value required at end of module
 __END__
 
+=encoding iso-8859-1
+
 =head1 NAME
 
 Net::Amazon::S3::Policy - manage Amazon S3 policies for HTTP POST forms
 
 =head1 VERSION
 
-This document describes Net::Amazon::S3::Policy version 0.1.2. Most likely,
+This document describes Net::Amazon::S3::Policy version 0.1.3. Most likely,
 this version number here is outdate, and you should peek the source.
 
 
@@ -375,7 +378,7 @@ Your policy can then be built like this:
          '$key         starts-with /restricted/', # restrict to here
          '$Content-Type starts-with image/', # accept any image format
          '$x-amz-meta-colour *', # accept any colour
-         'bucket: somebucket',
+         'bucket eq somebucket',
       ],
    );
 
@@ -744,5 +747,9 @@ considerare un software, o ancora al modo in cui avete sempre trattato
 software di terze parti, non usatelo. Se lo usate, accettate espressamente
 questa negazione di garanzia e la piena responsabilità per qualsiasi
 tipo di danno, di qualsiasi natura, possa derivarne.
+
+=head1 SEE ALSO
+
+L<Net::Amazon::S3>.
 
 =cut

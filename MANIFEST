@@ -10,3 +10,4 @@ t/01.test.t
 t/pod-coverage.t
 t/pod.t
 META.yml
+META.json                                Module JSON meta-data (added by MakeMaker)

@@ -1,4 +1,4 @@
-Net-Amazon-S3-Policy version 0.1.2
+Net-Amazon-S3-Policy version 0.1.3
 
 Net::Amazon::S3::Policy gives you an object-oriented interface to man‐
 age policies for Amazon S3 HTTP POST uploads.
