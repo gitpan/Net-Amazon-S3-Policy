@@ -2,11 +2,13 @@ package Net::Amazon::S3::Policy;
 
 use warnings;
 use strict;
-use version; our $VERSION = qv('0.1.3');
+use version; our $VERSION = qv('0.1.4');
 
 use Carp;
 use English qw( -no_match_vars );
 use JSON;
+use Encode ();
+use MIME::Base64 qw< decode_base64 >;
 
 use Exporter;
 our @ISA = qw( Exporter );
@@ -150,13 +152,15 @@ sub range {
 }
 
 sub json {
-   my $self   = shift;
+   my ($self, $args) = @_;
    my %params = %$self;
    delete $params{expiration} unless defined $params{expiration};
-   return to_json(\%params);
+   return to_json(\%params, $args);
 } ## end sub json
 
-sub base64 { return _encode_base64($_[0]->json()); }
+sub base64 {
+   return encode_base64(Encode::encode('utf-8', $_[0]->json()));
+}
 
 {
    no warnings;
@@ -168,7 +172,7 @@ sub base64 { return _encode_base64($_[0]->json()); }
 sub parse {
    my ($self, $json) = @_;
 
-   $json = _decode_base64($json)
+   $json = decode_base64($json)
      unless substr($json, 0, 1) eq '{';
 
    my %decoded = %{from_json($json)};
@@ -194,22 +198,13 @@ sub signature {
 
 sub signature_base64 {
    my ($self, $key) = @_;
-   return _encode_base64($self->signature($key));
+   return encode_base64($self->signature($key));
 }
-
-sub _decode_base64 {
-   require MIME::Base64;
-   no warnings 'redefine';
-   *_decode_base64 = \&MIME::Base64::decode_base64;
-   goto \&MIME::Base64::decode_base64;
-} ## end sub _decode_base64
 
 # Wrapper around base64 encoder, ensuring that there's no newline
 # to make AWS S3 happy
-sub _encode_base64 {
-   require MIME::Base64;
-   (my $retval = MIME::Base64::encode_base64($_[0])) =~ s/\n//gmxs;
-   return $retval;
+sub encode_base64 {
+   return MIME::Base64::encode_base64($_[0], '');
 }
 
 1;    # Magic true value required at end of module
@@ -391,6 +386,12 @@ Your policy can then be built like this:
    my $signature_for_form = $policy->signature_base64($key);
 
 =head1 INTERFACE 
+
+=begin PrivateMethods
+
+=head2 encode_base64
+
+=end PrivateMethods
 
 =head2 Module Interface
 
