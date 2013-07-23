@@ -1,5 +1,8 @@
 Revision history for Net-Amazon-S3-Policy
 
+0.1.5  Wed Jul 24 00:24:00 2013
+       Normalized test for base64.
+
 0.1.4  Mon Jul 22 22:04:00 2013
        Avoid POD tests for non-author.
        Changed input to Base64 encoding to raw bytes instead of Unicode.

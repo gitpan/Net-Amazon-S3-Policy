@@ -2,7 +2,7 @@ package Net::Amazon::S3::Policy;
 
 use warnings;
 use strict;
-use version; our $VERSION = qv('0.1.4');
+use version; our $VERSION = qv('0.1.5');
 
 use Carp;
 use English qw( -no_match_vars );
@@ -159,7 +159,8 @@ sub json {
 } ## end sub json
 
 sub base64 {
-   return encode_base64(Encode::encode('utf-8', $_[0]->json()));
+   my $self = shift;
+   return encode_base64(Encode::encode('utf-8', $self->json(@_)));
 }
 
 {

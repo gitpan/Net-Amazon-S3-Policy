@@ -108,7 +108,7 @@ BEGIN {
    );
 
    my $base64 = 'undefined';
-   eval { $base64 = $policy->base64(); };
-   my $expected_base64 = 'eyJleHBpcmF0aW9uIjoiMjAwOC0wOS0wMVQxODoxMDowMi4wMDBaIiwiY29uZGl0aW9ucyI6W1siZXEiLCIkcHJvdmEiLCJjaWFvIl0sWyJzdGFydHMtd2l0aCIsIiRwcm92YXh4eCIsImNpYW/imaUiXSxbInNvbWV0aGluZyIsIjAiLCIxMjMzMTIzOTEiXSxbInN0YXJ0cy13aXRoIiwiJGFueXRoaW5nIiwiIl0sWyJzdGFydHMtd2l0aCIsIiRhbnl0aGluZzIiLCIiXSxbInN0YXJ0cy13aXRoIiwiJGFueXRoaW5nMiIsImJsYWgiXSxbImVxIiwiJHdoYXQiLCJ0aGlzIl1dfQ==';
+   eval { $base64 = $policy->base64({canonical => 1}); };
+   my $expected_base64 = 'eyJjb25kaXRpb25zIjpbWyJlcSIsIiRwcm92YSIsImNpYW8iXSxbInN0YXJ0cy13aXRoIiwiJHByb3ZheHh4IiwiY2lhb+KZpSJdLFsic29tZXRoaW5nIiwiMCIsIjEyMzMxMjM5MSJdLFsic3RhcnRzLXdpdGgiLCIkYW55dGhpbmciLCIiXSxbInN0YXJ0cy13aXRoIiwiJGFueXRoaW5nMiIsIiJdLFsic3RhcnRzLXdpdGgiLCIkYW55dGhpbmcyIiwiYmxhaCJdLFsiZXEiLCIkd2hhdCIsInRoaXMiXV0sImV4cGlyYXRpb24iOiIyMDA4LTA5LTAxVDE4OjEwOjAyLjAwMFoifQ==';
    is($base64, $expected_base64, 'base64 encoding');
 }
