@@ -1,5 +1,8 @@
 Revision history for Net-Amazon-S3-Policy
 
+0.1.6  Fri Aug 02 22:58:00 2013
+       Set dependency on minimum perl version 5.8, for Encoding
+
 0.1.5  Wed Jul 24 00:24:00 2013
        Normalized test for base64.
 

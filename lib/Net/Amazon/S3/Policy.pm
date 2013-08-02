@@ -2,7 +2,7 @@ package Net::Amazon::S3::Policy;
 
 use warnings;
 use strict;
-use version; our $VERSION = qv('0.1.5');
+use version; our $VERSION = qv('0.1.6');
 
 use Carp;
 use English qw( -no_match_vars );
